@@ -40,6 +40,20 @@ def parse_movielens(datapath, usercount, moviecount):
 
 
 def ratings_mean(ratings, mask):
+    """
+    axis=0表示按列向量处理，求多个列向量的范数
+    axis=1表示按行向量处理，求多个行向量的范数
+    a
+    Out[14]: 
+    array([[1, 2],
+           [3, 4]])
+    
+    np.sum(a, axis=0)
+    Out[15]: array([4, 6])
+    
+    np.sum(a, axis=1)
+    Out[16]: array([3, 7])
+    """
     return np.sum(ratings, axis=0) / (np.sum(mask, axis=0) + np.finfo(np.float32).eps)
 
 
@@ -47,6 +61,12 @@ def euclidean_rank(feature, query):
     # Euclidean distance
     compares = np.sqrt(np.sum((feature - np.tile(query.reshape((1,-1)), (feature.shape[0], 1)))**2, axis=1))
     # 距离从小到大排序的结果
+    """np.argsort(a, axis=-1, kind='quicksort', order=None)
+        It returns an array of indices of the same shape as `a` that index data along the given axis in sorted order
+        x = np.array([3, 1, 2])
+        np.argsort(x)
+        array([1, 2, 0])
+    """
     rank = np.argsort(compares)
     # 因为feature中含有query，compares和rank的第一个元素与query本身有关，所以排除第一个元素
     return compares[1:], rank[1:]
@@ -54,9 +74,55 @@ def euclidean_rank(feature, query):
 
 def cosine_rank(feature, query):
     # Adjusted Cosine Similarity
+    """
+    axis=0表示按列向量处理，求多个列向量的范数
+    axis=1表示按行向量处理，求多个行向量的范数
+    a = np.array([[1, 2], [3, 4]])
+    a
+    Out[9]: 
+    array([[1, 2],
+           [3, 4]])
+    
+    np.mean(a, axis=0)
+    Out[10]: array([2., 3.])
+    
+    np.mean(a, axis=1)
+    Out[11]: array([1.5, 3.5])
+    """
     mu = feature.mean(axis=0)
+   
     new_feature = feature - mu
+    """
+    b
+    Out[26]: 
+    array([[1],
+           [1]])
+    
+    a
+    Out[27]: 
+    array([[1, 2],
+           [3, 4]])
+    
+    a-b
+    Out[28]: 
+    array([[0, 1],
+           [2, 3]])
+    """
     new_query = query - mu
+    """
+    axis=0表示按列向量处理，求多个列向量的范数
+    axis=1表示按行向量处理，求多个行向量的范数
+    a
+    Out[20]: 
+    array([[1, 2],
+           [3, 4]])
+    
+    np.linalg.norm(a, ord=2, axis=0)
+    Out[21]: array([3.16227766, 4.47213595])
+    
+    np.linalg.norm(a, ord=2, axis=1)
+    Out[22]: array([2.23606798, 5.        ])
+      """
     feature_norm = np.linalg.norm(new_feature, ord=2, axis=1)
     query_norm = np.linalg.norm(new_query, ord=2)
     compares = np.divide(np.matmul(new_feature, query.reshape((-1,1))), feature_norm[:,np.newaxis]) / query_norm        
